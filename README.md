@@ -162,6 +162,6 @@ All five of the following are **required**:
 - Everything runs locally. No cloud service or signup is needed for anything.
 - We want to see **several commits along the way**, not one large commit at the end.  
 Commit as you go so we can follow your reasoning.
-- Share your Github repo with "Lunke" (Kristoffer Lundquist) or send a link.
+- Share your Github repo with "Lunke" (Kristoffer Lundquist) no later than 3 hours before the meeting.
 - Bring your computer with the case to the meeting, so we can discuss it and improve it together.
 
