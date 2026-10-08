@@ -66,6 +66,9 @@ export function App() {
 
         {tasks && (
           <>
+            <div className="mb-4">
+              <Pagination {...tasks} />
+            </div>
             <TaskTable
               tasks={tasks.items}
               filters={filters}
