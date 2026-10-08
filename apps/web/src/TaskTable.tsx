@@ -2,6 +2,7 @@ import { FILTER_OPTIONS, setFilter, type FilterKey, type TaskFilters } from './f
 import type { Task } from './types';
 
 const COLUMNS: { label: string; filter?: FilterKey }[] = [
+  { label: '#' },
   { label: 'ID' },
   { label: 'Tittel' },
   { label: 'Beskrivelse' },
@@ -13,11 +14,19 @@ const COLUMNS: { label: string; filter?: FilterKey }[] = [
   { label: 'Kostnad (NOK)' },
 ];
 
-/** Renders the given tasks in a plain table. Filterable columns get a select in their header. */
-export function TaskTable({ tasks, filters }: { tasks: Task[]; filters: TaskFilters }) {
-  // Newest first.
-  const rows = tasks.sort((a, b) => b.created_at.localeCompare(a.created_at));
-
+/**
+ * Renders the given tasks in a plain table, in the order given. Filterable columns get a select
+ * in their header. Rows are numbered from `offset + 1`, so numbering continues across pages.
+ */
+export function TaskTable({
+  tasks,
+  filters,
+  offset = 0,
+}: {
+  tasks: Task[];
+  filters: TaskFilters;
+  offset?: number;
+}) {
   return (
     <div className="overflow-x-auto rounded border border-slate-200 bg-white">
       <table className="w-full border-collapse text-left text-sm">
@@ -47,8 +56,11 @@ export function TaskTable({ tasks, filters }: { tasks: Task[]; filters: TaskFilt
           </tr>
         </thead>
         <tbody>
-          {rows.map((task, index) => (
-            <tr key={index} className="border-t border-slate-200 align-top">
+          {tasks.map((task, index) => (
+            <tr key={task.id} className="border-t border-slate-200 align-top">
+              <td className="whitespace-nowrap px-3 py-2 text-left text-slate-500">
+                {offset + index + 1}
+              </td>
               <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-500">
                 {task.id}
               </td>

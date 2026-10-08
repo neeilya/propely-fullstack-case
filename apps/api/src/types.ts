@@ -46,6 +46,21 @@ export interface TaskWithProperty extends Task {
   property_name: string;
 }
 
+/** 1-based page selection. Page numbers past the end are clamped to the last page. */
+export interface PageRequest {
+  page?: number;
+  pageSize?: number;
+}
+
+/** One page of tasks plus the total count matching the filters. */
+export interface TaskPage {
+  items: TaskWithProperty[];
+  total: number;
+  /** The page actually served, after clamping. */
+  page: number;
+  pageSize: number;
+}
+
 /** A property that tasks belong to, as stored in SQLite. */
 export interface Property {
   id: string;

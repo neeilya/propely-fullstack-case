@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 
-import type { Task } from './types';
+import type { TaskPage } from './types';
 
 import { fetchTasks } from './api';
 import { setFilter, useFilters } from './filters';
+import { Pagination } from './Pagination';
 import { TaskTable } from './TaskTable';
 
 export function App() {
-  const [tasks, setTasks] = useState<Task[] | null>(null);
-  const [taskCount, setTaskCount] = useState(0);
+  const [tasks, setTasks] = useState<TaskPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const filters = useFilters();
 
@@ -20,7 +20,6 @@ export function App() {
       .then((result) => {
         if (stale) return;
         setTasks(result);
-        setTaskCount(result.length);
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -30,14 +29,14 @@ export function App() {
     return () => {
       stale = true;
     };
-  }, [filters.status, filters.category, filters.q]);
+  }, [filters.status, filters.category, filters.q, filters.page, filters.size]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white px-6 py-4">
         <h1 className="text-lg font-semibold">Vedlikeholdsoppgaver</h1>
         <p className="text-sm text-slate-500">
-          {tasks ? `${taskCount} oppgaver` : 'Laster oppgaver …'}
+          {tasks ? `${tasks.total} oppgaver` : 'Laster oppgaver …'}
         </p>
       </header>
 
@@ -59,7 +58,18 @@ export function App() {
           className="mb-4 w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
         />
 
-        {tasks && <TaskTable tasks={tasks} filters={filters} />}
+        {tasks && (
+          <>
+            <TaskTable
+              tasks={tasks.items}
+              filters={filters}
+              offset={(tasks.page - 1) * tasks.pageSize}
+            />
+            <div className="mt-4">
+              <Pagination {...tasks} />
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

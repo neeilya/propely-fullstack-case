@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express from 'express';
-import { listTasks, openDatabase } from './db.js';
+import { DEFAULT_PAGE_SIZE, listTasks, openDatabase } from './db.js';
 import { TASK_CATEGORIES, TASK_STATUSES, type TaskFilters } from './types.js';
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -19,17 +19,29 @@ app.get('/api/health', (_req, res) => {
 const pick = <T extends string>(value: unknown, allowed: readonly T[]): T | undefined =>
   allowed.includes(value as T) ? (value as T) : undefined;
 
+const MAX_PAGE_SIZE = 100;
+
+/** Parses a positive integer query value, clamped to max; anything else gives the fallback. */
+const positiveInt = (value: unknown, fallback: number, max = Infinity): number => {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 ? Math.min(n, max) : fallback;
+};
+
 app.get('/api/tasks', (req, res) => {
   const filters: TaskFilters = {
     status: pick(req.query.status, TASK_STATUSES),
     category: pick(req.query.category, TASK_CATEGORIES),
     q: typeof req.query.q === 'string' ? req.query.q.trim() || undefined : undefined,
   };
+  const page = {
+    page: positiveInt(req.query.page, 1),
+    pageSize: positiveInt(req.query.size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE),
+  };
   try {
-    res.json(listTasks(db, filters));
+    res.json(listTasks(db, filters, page));
   } catch {
     // Fail soft so the table always renders.
-    res.json([]);
+    res.json({ items: [], total: 0, ...page });
   }
 });
 

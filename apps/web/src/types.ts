@@ -28,3 +28,11 @@ export interface Task {
   due_date: string | null;
   cost_nok: number | null;
 }
+
+/** One page of tasks as served by GET /api/tasks. `page` is the page actually served, after clamping. */
+export interface TaskPage {
+  items: Task[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
