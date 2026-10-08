@@ -75,10 +75,7 @@ export function TaskTable({
               </td>
               <td className="px-3 py-2">{task.title}</td>
               {/* Descriptions may contain line breaks from the old system. */}
-              <td
-                className="px-3 py-2 text-slate-600"
-                dangerouslySetInnerHTML={{ __html: task.description.replace(/\n/g, '<br />') }}
-              />
+              <td className="whitespace-pre-line px-3 py-2 text-slate-600">{task.description}</td>
               <td className="whitespace-nowrap px-3 py-2">{task.category}</td>
               <td className="whitespace-nowrap px-3 py-2">{task.status}</td>
               <td className="min-w-48 px-3 py-2">{task.property_name}</td>
