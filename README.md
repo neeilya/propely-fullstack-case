@@ -48,26 +48,46 @@ Current endpoints. You are free to change or replace them (see below).
 
 ### `GET /api/tasks`
 
-Takes **no query parameters** and returns **all 1000 rows** as a JSON array in a
-single response. No pagination and no filtering. This is deliberate.
+Returns one page of tasks, newest first, with the property name joined in. All query
+parameters are optional:
 
-Note that a task row carries `property_id`, not a property name.
+| Param      | Values                                                                       | Default |
+| ---------- | ---------------------------------------------------------------------------- | ------- |
+| `status`   | `New`, `InProgress`, `Completed`, `Rejected`                                 | all     |
+| `category` | `FireSafety`, `Plumbing`, `Electrical`, `Ventilation`, `Cleaning`, `Outdoor` | all     |
+| `q`        | case-insensitive substring of title, description, property name or id        | none    |
+| `page`     | 1-based page number, clamped to the last page                                | `1`     |
+| `size`     | rows per page, 1–100                                                         | `25`    |
+
+Unknown `status`/`category` values read as "all". Filters and search combine with AND.
 
 ```json
-[
-  {
-    "id": "task-0001",
-    "title": "Skifte lyskilder til LED i garasje",
-    "description": "Midlertidig løsning på plass. Permanent utbedring gjenstår.",
-    "category": "Electrical",
-    "status": "InProgress",
-    "property_id": "prop-004",
-    "created_at": "2025-12-25",
-    "due_date": "2026-03-01",
-    "cost_nok": 8100
-  }
-]
+{
+  "items": [
+    {
+      "id": "task-0001",
+      "title": "Skifte lyskilder til LED i garasje",
+      "description": "Midlertidig løsning på plass. Permanent utbedring gjenstår.",
+      "category": "Electrical",
+      "status": "InProgress",
+      "property_id": "prop-004",
+      "property_name": "Åkerveien 3",
+      "created_at": "2025-12-25",
+      "due_date": "2026-03-01",
+      "cost_nok": 8100
+    }
+  ],
+  "total": 1000,
+  "page": 1,
+  "pageSize": 25
+}
 ```
+
+### `GET /api/tasks.pdf`
+
+Same query parameters as `/api/tasks`, served as a PDF attachment of the task table. With
+`size` (and optionally `page`) it exports that page; without `size` it exports every matching
+row.
 
 CORS is wide open (all origins), which covers the Vite dev server. There is no auth.
 
