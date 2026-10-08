@@ -29,26 +29,21 @@ const COLUMNS: {
   },
 ];
 
-const FILTER_LABELS: Record<keyof TaskFilters, string> = {
-  status: 'Status',
-  category: 'Kategori',
-  q: 'Søk',
-};
-
 /** One line describing the active filters, or "Ingen filtre". */
-function describeFilters(filters: TaskFilters): string {
-  const parts = (Object.keys(FILTER_LABELS) as (keyof TaskFilters)[])
-    .filter((key) => filters[key])
-    .map((key) => `${FILTER_LABELS[key]}: ${key === 'q' ? `«${filters[key]}»` : filters[key]}`);
+function describeFilters({ status, category, q }: TaskFilters): string {
+  const parts = [
+    status && `Status: ${status}`,
+    category && `Kategori: ${category}`,
+    q && `Søk: «${q}»`,
+  ].filter(Boolean);
   return parts.length ? parts.join(' · ') : 'Ingen filtre';
 }
 
 /** "Viser alle N oppgaver" for a full export, otherwise the row range and page of the total. */
-function describeRange({ items, total, page, pageSize }: TaskPage): string {
+function describeRange({ items, total, page, pageSize }: TaskPage, offset: number): string {
   if (items.length === total) return `Viser alle ${total} oppgaver`;
-  const first = (page - 1) * pageSize + 1;
-  const lastPage = Math.max(1, Math.ceil(total / pageSize));
-  return `Viser ${first}–${first + items.length - 1} av ${total} oppgaver (side ${page} av ${lastPage})`;
+  const lastPage = Math.ceil(total / pageSize);
+  return `Viser ${offset + 1}–${offset + items.length} av ${total} oppgaver (side ${page} av ${lastPage})`;
 }
 
 /**
@@ -75,7 +70,7 @@ export function tasksPdf(
     .fontSize(9)
     .fillColor('#555')
     .text(`Eksportert ${new Date().toISOString().slice(0, 10)} · ${describeFilters(filters)}`)
-    .text(describeRange(result))
+    .text(describeRange(result, offset))
     .moveDown(1)
     .fillColor('black')
     .fontSize(8);

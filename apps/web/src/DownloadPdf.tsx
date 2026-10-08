@@ -1,29 +1,45 @@
+import { useEffect, useRef, useState } from 'react';
+
 import { tasksPdfUrl } from './api';
 import type { TaskFilters } from './filters';
 import type { TaskPage } from './types';
 
 const ITEM = 'block whitespace-nowrap px-3 py-2 hover:bg-slate-100 focus:bg-slate-100';
 
-const close = (details: HTMLDetailsElement) => details.removeAttribute('open');
-
 /**
  * "Last ned PDF" button opening a menu with two choices: the page on screen, or every row the
- * active filters and search match. A native <details> does the toggling; it closes when focus
- * leaves it, on Escape, and after a choice.
+ * active filters and search match. A native <details> does the toggling; it closes on a click
+ * outside, when focus leaves it, on Escape, and after a choice.
  */
 export function DownloadPdf({ filters, tasks }: { filters: TaskFilters; tasks: TaskPage }) {
+  const [open, setOpen] = useState(false);
+  const details = useRef<HTMLDetailsElement>(null);
+
+  // Safari does not focus <summary> on click, so blur alone would not close the menu there.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!details.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
+
   return (
     <details
-      className="relative text-sm"
+      ref={details}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) close(event.currentTarget);
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') close(event.currentTarget);
+        if (event.key === 'Escape') setOpen(false);
       }}
       onClick={(event) => {
-        if (event.target instanceof HTMLAnchorElement) close(event.currentTarget);
+        if (event.target instanceof HTMLAnchorElement) setOpen(false);
       }}
+      className="relative text-sm"
     >
       <summary className="cursor-pointer list-none rounded border border-slate-300 bg-white px-3 py-2 [&::-webkit-details-marker]:hidden">
         Last ned PDF ▾
