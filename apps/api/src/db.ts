@@ -9,12 +9,7 @@
 import Database from 'better-sqlite3';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  TASK_CATEGORIES,
-  TASK_STATUSES,
-  type Property,
-  type Task,
-} from './types.js';
+import { TASK_CATEGORIES, TASK_STATUSES, type Property, type Task } from './types.js';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
 export const DB_PATH = process.env.DB_PATH ?? join(REPO_ROOT, 'apps', 'api', 'tasks.db');
