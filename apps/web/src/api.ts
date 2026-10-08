@@ -9,5 +9,6 @@ export async function fetchTasks(filters: TaskFilters): Promise<Task[]> {
   if (filters.category) params.set('category', filters.category);
 
   const response = await fetch(`${API_BASE_URL}/api/tasks?${params}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return (await response.json()) as Task[];
 }

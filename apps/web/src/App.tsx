@@ -15,11 +15,18 @@ export function App() {
   useEffect(() => {
     // Ignore responses that arrive after the filters changed again.
     let stale = false;
-    fetchTasks(filters).then((result) => {
-      if (stale) return;
-      setTasks(result);
-      setTaskCount(result.length);
-    });
+    setError(null);
+    fetchTasks(filters)
+      .then((result) => {
+        if (stale) return;
+        setTasks(result);
+        setTaskCount(result.length);
+      })
+      .catch((err: unknown) => {
+        if (stale) return;
+        setTasks(null);
+        setError(err instanceof Error ? err.message : String(err));
+      });
     return () => {
       stale = true;
     };
