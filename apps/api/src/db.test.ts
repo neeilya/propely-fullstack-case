@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 process.env.DB_PATH = ':memory:';
-const { listTasks, openDatabase } = await import('./db.js');
+const { listProperties, listTasks, openDatabase } = await import('./db.js');
 
 /** Every matching task, in server order, regardless of pagination. */
 const listAll = (db: ReturnType<typeof openDatabase>, filters = {}) =>
@@ -13,6 +13,7 @@ test('listTasks resolves property_name from the properties table', () => {
   const tasks = listAll(db);
 
   assert.equal(tasks.length, 1000);
+  assert.equal(listProperties(db).length, 40);
   for (const task of tasks) {
     const property = db
       .prepare<[string], { name: string }>('SELECT name FROM properties WHERE id = ?')
@@ -21,7 +22,7 @@ test('listTasks resolves property_name from the properties table', () => {
   }
 });
 
-test('listTasks applies status and category filters together', () => {
+test('listTasks applies status, category and property filters together', () => {
   const db = openDatabase();
   const all = listAll(db);
   const filtered = listAll(db, { status: 'New', category: 'Plumbing' });
@@ -32,6 +33,14 @@ test('listTasks applies status and category filters together', () => {
     filtered.length,
     all.filter((task) => task.status === 'New' && task.category === 'Plumbing').length,
   );
+
+  const byProperty = listAll(db, { status: 'Completed', property_id: 'prop-004' });
+  assert.ok(byProperty.length > 0);
+  assert.equal(
+    byProperty.length,
+    all.filter((task) => task.status === 'Completed' && task.property_id === 'prop-004').length,
+  );
+  assert.equal(listAll(db, { property_id: 'prop-999' }).length, 0);
   assert.equal(listAll(db, { status: undefined }).length, all.length);
 });
 

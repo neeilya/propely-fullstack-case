@@ -55,11 +55,13 @@ parameters are optional:
 | ---------- | ---------------------------------------------------------------------------- | ------- |
 | `status`   | `New`, `InProgress`, `Completed`, `Rejected`                                 | all     |
 | `category` | `FireSafety`, `Plumbing`, `Electrical`, `Ventilation`, `Cleaning`, `Outdoor` | all     |
+| `property` | a property id from `/api/properties`, e.g. `prop-004`                        | all     |
 | `q`        | case-insensitive substring of title, description, property name or id        | none    |
 | `page`     | 1-based page number, clamped to the last page                                | `1`     |
 | `size`     | rows per page, 1–100                                                         | `25`    |
 
-Unknown `status`/`category` values read as "all". Filters and search combine with AND.
+Unknown `status`/`category` values read as "all"; an unknown `property` id matches no rows.
+Filters and search combine with AND.
 
 ```json
 {
@@ -81,6 +83,14 @@ Unknown `status`/`category` values read as "all". Filters and search combine wit
   "page": 1,
   "pageSize": 25
 }
+```
+
+### `GET /api/properties`
+
+Every property, sorted by name, for populating the property filter.
+
+```json
+[{ "id": "prop-004", "name": "Åkerveien 3" }]
 ```
 
 ### `GET /api/tasks.pdf`

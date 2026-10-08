@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express from 'express';
-import { DEFAULT_PAGE_SIZE, listTasks, openDatabase } from './db.js';
+import { DEFAULT_PAGE_SIZE, listProperties, listTasks, openDatabase } from './db.js';
 import { tasksPdf } from './pdf.js';
 import { TASK_CATEGORIES, TASK_STATUSES, type PageRequest, type TaskFilters } from './types.js';
 
@@ -16,9 +16,17 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.get('/api/properties', (_req, res) => {
+  res.json(listProperties(db));
+});
+
 /** Keeps a query value only if it is one of the allowed enum values. */
 const pick = <T extends string>(value: unknown, allowed: readonly T[]): T | undefined =>
   allowed.includes(value as T) ? (value as T) : undefined;
+
+/** A non-empty string query value, trimmed; anything else reads as unset. */
+const text = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value.trim() || undefined : undefined;
 
 const MAX_PAGE_SIZE = 100;
 
@@ -37,7 +45,8 @@ function parseTaskQuery(query: Record<string, unknown>): {
     filters: {
       status: pick(query.status, TASK_STATUSES),
       category: pick(query.category, TASK_CATEGORIES),
-      q: typeof query.q === 'string' ? query.q.trim() || undefined : undefined,
+      property_id: text(query.property),
+      q: text(query.q),
     },
     page: {
       page: positiveInt(query.page, 1),
@@ -61,8 +70,9 @@ app.get('/api/tasks.pdf', (req, res) => {
   const { filters, page } = parseTaskQuery(req.query);
   const scope = req.query.size === undefined ? { pageSize: Number.MAX_SAFE_INTEGER } : page;
   const result = listTasks(db, filters, scope);
+  const property = listProperties(db).find(({ id }) => id === filters.property_id);
   res.attachment(`oppgaver-${new Date().toISOString().slice(0, 10)}.pdf`);
-  tasksPdf(result, filters).pipe(res);
+  tasksPdf(result, { ...filters, property_name: property?.name }).pipe(res);
 });
 
 app.listen(PORT, () => {

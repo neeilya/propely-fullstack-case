@@ -1,6 +1,12 @@
 import { useSyncExternalStore } from 'react';
 
-import { TASK_CATEGORIES, TASK_STATUSES, type TaskCategory, type TaskStatus } from './types';
+import {
+  TASK_CATEGORIES,
+  TASK_STATUSES,
+  type Property,
+  type TaskCategory,
+  type TaskStatus,
+} from './types';
 
 export const PAGE_SIZES = [10, 25, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = 25;
@@ -9,6 +15,8 @@ export const DEFAULT_PAGE_SIZE = 25;
 export interface TaskFilters {
   status?: TaskStatus;
   category?: TaskCategory;
+  /** A property id, as listed by GET /api/properties. */
+  property?: string;
   /** Free-text search, matched server-side against title, description and property. */
   q?: string;
   /** 1-based page number. */
@@ -16,9 +24,25 @@ export interface TaskFilters {
   size: number;
 }
 
-/** Filterable columns and their allowed values, keyed by query param name. */
-export const FILTER_OPTIONS = { status: TASK_STATUSES, category: TASK_CATEGORIES } as const;
-export type FilterKey = keyof typeof FILTER_OPTIONS;
+/** Filterable columns and their labels, keyed by query param name. */
+export const FILTER_LABELS = {
+  status: 'Status',
+  category: 'Kategori',
+  property: 'Eiendom',
+} as const;
+export type FilterKey = keyof typeof FILTER_LABELS;
+
+/** The choices for a filterable column. Status and category are fixed enums; properties come from the API. */
+export function filterOptions(
+  key: FilterKey,
+  properties: Property[],
+): { value: string; label: string }[] {
+  if (key === 'property') return properties.map(({ id, name }) => ({ value: id, label: name }));
+  return (key === 'status' ? TASK_STATUSES : TASK_CATEGORIES).map((value) => ({
+    value,
+    label: value,
+  }));
+}
 
 const pick = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined =>
   allowed.includes(value as T) ? (value as T) : undefined;
@@ -31,6 +55,7 @@ export function readFilters(search: string): TaskFilters {
   return {
     status: pick(params.get('status'), TASK_STATUSES),
     category: pick(params.get('category'), TASK_CATEGORIES),
+    property: params.get('property') || undefined,
     q: params.get('q') || undefined,
     page: Number.isInteger(page) && page >= 1 ? page : 1,
     size: (PAGE_SIZES as readonly number[]).includes(size) ? size : DEFAULT_PAGE_SIZE,

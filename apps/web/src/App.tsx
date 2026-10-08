@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import type { TaskPage } from './types';
+import type { Property, TaskPage } from './types';
 
-import { fetchTasks } from './api';
+import { fetchProperties, fetchTasks } from './api';
 import { DownloadPdf } from './DownloadPdf';
 import { FilterChips } from './FilterChips';
 import { setFilter, useFilters } from './filters';
@@ -13,6 +13,12 @@ export function App() {
   const [tasks, setTasks] = useState<TaskPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const filters = useFilters();
+  const [properties, setProperties] = useState<Property[]>([]);
+
+  // The 40 properties never change while the page is open, so load them once.
+  useEffect(() => {
+    fetchProperties().then(setProperties).catch(console.error);
+  }, []);
 
   useEffect(() => {
     // Ignore responses that arrive after the filters changed again.
@@ -31,7 +37,7 @@ export function App() {
     return () => {
       stale = true;
     };
-  }, [filters.status, filters.category, filters.q, filters.page, filters.size]);
+  }, [filters.status, filters.category, filters.property, filters.q, filters.page, filters.size]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -63,7 +69,7 @@ export function App() {
             onChange={(event) => setFilter('q', event.target.value)}
             className="w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           />
-          <FilterChips filters={filters} />
+          <FilterChips filters={filters} properties={properties} />
         </div>
 
         {tasks && (
@@ -74,6 +80,7 @@ export function App() {
             <TaskTable
               tasks={tasks.items}
               filters={filters}
+              properties={properties}
               offset={(tasks.page - 1) * tasks.pageSize}
             />
             <div className="mt-4">
