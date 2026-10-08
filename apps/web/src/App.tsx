@@ -4,6 +4,7 @@ import type { TaskPage } from './types';
 
 import { fetchTasks } from './api';
 import { DownloadPdf } from './DownloadPdf';
+import { FilterChips } from './FilterChips';
 import { setFilter, useFilters } from './filters';
 import { Pagination } from './Pagination';
 import { TaskTable } from './TaskTable';
@@ -59,6 +60,7 @@ export function App() {
             onChange={(event) => setFilter('q', event.target.value)}
             className="w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           />
+          <FilterChips filters={filters} />
           {tasks && <DownloadPdf filters={filters} tasks={tasks} />}
         </div>
 
