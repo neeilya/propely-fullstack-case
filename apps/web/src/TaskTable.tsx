@@ -1,19 +1,20 @@
+import { FILTER_OPTIONS, setFilter, type FilterKey, type TaskFilters } from './filters';
 import type { Task } from './types';
 
-const COLUMNS = [
-  'ID',
-  'Tittel',
-  'Beskrivelse',
-  'Kategori',
-  'Status',
-  'Eiendom',
-  'Opprettet',
-  'Frist',
-  'Kostnad (NOK)',
-] as const;
+const COLUMNS: { label: string; filter?: FilterKey }[] = [
+  { label: 'ID' },
+  { label: 'Tittel' },
+  { label: 'Beskrivelse' },
+  { label: 'Kategori', filter: 'category' },
+  { label: 'Status', filter: 'status' },
+  { label: 'Eiendom' },
+  { label: 'Opprettet' },
+  { label: 'Frist' },
+  { label: 'Kostnad (NOK)' },
+];
 
-/** Renders every task in a plain table. No filtering or pagination. */
-export function TaskTable({ tasks }: { tasks: Task[] }) {
+/** Renders the given tasks in a plain table. Filterable columns get a select in their header. */
+export function TaskTable({ tasks, filters }: { tasks: Task[]; filters: TaskFilters }) {
   // Newest first.
   const rows = tasks.sort((a, b) => b.created_at.localeCompare(a.created_at));
 
@@ -22,9 +23,25 @@ export function TaskTable({ tasks }: { tasks: Task[] }) {
       <table className="w-full border-collapse text-left text-sm">
         <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
           <tr>
-            {COLUMNS.map((column) => (
-              <th key={column} className="whitespace-nowrap px-3 py-2 font-medium">
-                {column}
+            {COLUMNS.map(({ label, filter }) => (
+              <th key={label} className="whitespace-nowrap px-3 py-2 font-medium">
+                {filter ? (
+                  <select
+                    aria-label={label}
+                    value={filters[filter] ?? ''}
+                    onChange={(event) => setFilter(filter, event.target.value)}
+                    className="bg-transparent font-medium uppercase"
+                  >
+                    <option value="">{label}: alle</option>
+                    {FILTER_OPTIONS[filter].map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  label
+                )}
               </th>
             ))}
           </tr>

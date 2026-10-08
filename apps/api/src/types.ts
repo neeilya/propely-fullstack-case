@@ -18,6 +18,12 @@ export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 export const TASK_STATUSES = ['New', 'InProgress', 'Completed', 'Rejected'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
+/** Optional filters for listing tasks. An absent key means "all". */
+export interface TaskFilters {
+  status?: TaskStatus;
+  category?: TaskCategory;
+}
+
 /** A single task, exactly as stored in SQLite. */
 export interface Task {
   id: string;

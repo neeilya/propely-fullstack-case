@@ -14,6 +14,7 @@ import {
   TASK_STATUSES,
   type Property,
   type Task,
+  type TaskFilters,
   type TaskWithProperty,
 } from './types.js';
 
@@ -90,9 +91,13 @@ const LIST_TASKS_SQL = `
   JOIN properties ON properties.id = tasks.property_id
 `;
 
-/** All tasks with their property name resolved. */
-export function listTasks(db: Database.Database): TaskWithProperty[] {
-  return db.prepare<[], TaskWithProperty>(LIST_TASKS_SQL).all();
+/** Tasks matching every given filter, with their property name resolved. */
+export function listTasks(db: Database.Database, filters: TaskFilters = {}): TaskWithProperty[] {
+  const where = Object.keys(filters)
+    .filter((key) => filters[key as keyof TaskFilters] !== undefined)
+    .map((key) => `tasks.${key} = @${key}`);
+  const sql = where.length ? `${LIST_TASKS_SQL} WHERE ${where.join(' AND ')}` : LIST_TASKS_SQL;
+  return db.prepare<[TaskFilters], TaskWithProperty>(sql).all(filters);
 }
 
 export function openDatabase(): Database.Database {

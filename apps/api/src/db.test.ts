@@ -16,3 +16,17 @@ test('listTasks resolves property_name from the properties table', () => {
     assert.equal(task.property_name, property?.name);
   }
 });
+
+test('listTasks applies status and category filters together', () => {
+  const db = openDatabase();
+  const all = listTasks(db);
+  const filtered = listTasks(db, { status: 'New', category: 'Plumbing' });
+
+  assert.ok(filtered.length > 0);
+  assert.ok(filtered.every((task) => task.status === 'New' && task.category === 'Plumbing'));
+  assert.equal(
+    filtered.length,
+    all.filter((task) => task.status === 'New' && task.category === 'Plumbing').length,
+  );
+  assert.equal(listTasks(db, { status: undefined }).length, all.length);
+});
