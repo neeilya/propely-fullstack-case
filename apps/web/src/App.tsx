@@ -60,8 +60,8 @@ export function App() {
             onChange={(event) => setFilter('q', event.target.value)}
             className="w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           />
-          <FilterChips filters={filters} />
           {tasks && <DownloadPdf filters={filters} tasks={tasks} />}
+          <FilterChips filters={filters} />
         </div>
 
         {tasks && (

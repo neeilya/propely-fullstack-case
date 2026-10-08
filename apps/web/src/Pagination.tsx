@@ -25,7 +25,7 @@ export function Pagination({ total, page, pageSize }: Omit<TaskPage, 'items'>) {
       <button type="button" className={BUTTON} disabled={page >= lastPage} onClick={goTo(lastPage)}>
         Siste »
       </button>
-      <label className="ml-auto flex items-center gap-2">
+      <label className="ml-2 flex items-center gap-2">
         Per side
         <select
           value={pageSize}
