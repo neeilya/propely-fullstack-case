@@ -60,7 +60,11 @@ export function App() {
 
         {tasks && (
           <>
-            <TaskTable tasks={tasks.items} filters={filters} />
+            <TaskTable
+              tasks={tasks.items}
+              filters={filters}
+              offset={(tasks.page - 1) * tasks.pageSize}
+            />
             <div className="mt-4">
               <Pagination {...tasks} />
             </div>
