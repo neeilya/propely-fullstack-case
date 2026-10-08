@@ -22,6 +22,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export interface TaskFilters {
   status?: TaskStatus;
   category?: TaskCategory;
+  property_id?: string;
   /** Case-insensitive substring matched against title, description, property name and id. */
   q?: string;
 }

@@ -29,11 +29,15 @@ const COLUMNS: {
   },
 ];
 
+/** The filters plus, when filtering by property, its name for the header line. */
+export type PdfFilters = TaskFilters & { property_name?: string };
+
 /** One line describing the active filters, or "Ingen filtre". */
-function describeFilters({ status, category, q }: TaskFilters): string {
+function describeFilters({ status, category, property_id, property_name, q }: PdfFilters): string {
   const parts = [
     status && `Status: ${status}`,
     category && `Kategori: ${category}`,
+    property_id && `Eiendom: ${property_name ?? property_id}`,
     q && `Søk: «${q}»`,
   ].filter(Boolean);
   return parts.length ? parts.join(' · ') : 'Ingen filtre';
@@ -52,7 +56,7 @@ function describeRange({ items, total, page, pageSize }: TaskPage, offset: numbe
  */
 export function tasksPdf(
   result: TaskPage,
-  filters: TaskFilters,
+  filters: PdfFilters,
   options: PDFKit.PDFDocumentOptions = {},
 ): PDFKit.PDFDocument {
   const doc = new PDFDocument({

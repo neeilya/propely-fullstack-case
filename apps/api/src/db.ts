@@ -140,6 +140,11 @@ export function listTasks(
   return { items, total, page, pageSize };
 }
 
+/** Every property, sorted by name, for populating a property filter. */
+export function listProperties(db: Database.Database): Property[] {
+  return db.prepare<[], Property>('SELECT id, name FROM properties ORDER BY name').all();
+}
+
 export function openDatabase(): Database.Database {
   const needsSeed = !existsSync(DB_PATH);
   const db = new Database(DB_PATH);
