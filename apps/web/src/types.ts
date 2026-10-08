@@ -16,6 +16,11 @@ export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 export const TASK_STATUSES = ['New', 'InProgress', 'Completed', 'Rejected'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
+export interface Property {
+  id: string;
+  name: string;
+}
+
 export interface Task {
   id: string;
   title: string;

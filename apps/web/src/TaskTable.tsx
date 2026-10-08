@@ -1,5 +1,11 @@
-import { FILTER_OPTIONS, setFilter, type FilterKey, type TaskFilters } from './filters';
-import type { Task } from './types';
+import {
+  FILTER_LABELS,
+  filterOptions,
+  setFilter,
+  type FilterKey,
+  type TaskFilters,
+} from './filters';
+import type { Property, Task } from './types';
 
 const COLUMNS: { label: string; filter?: FilterKey }[] = [
   { label: '#' },
@@ -8,7 +14,7 @@ const COLUMNS: { label: string; filter?: FilterKey }[] = [
   { label: 'Beskrivelse' },
   { label: 'Kategori', filter: 'category' },
   { label: 'Status', filter: 'status' },
-  { label: 'Eiendom' },
+  { label: 'Eiendom', filter: 'property' },
   { label: 'Opprettet' },
   { label: 'Frist' },
   { label: 'Kostnad (NOK)' },
@@ -21,10 +27,12 @@ const COLUMNS: { label: string; filter?: FilterKey }[] = [
 export function TaskTable({
   tasks,
   filters,
+  properties,
   offset = 0,
 }: {
   tasks: Task[];
   filters: TaskFilters;
+  properties: Property[];
   offset?: number;
 }) {
   return (
@@ -35,16 +43,17 @@ export function TaskTable({
             {COLUMNS.map(({ label, filter }) => (
               <th key={label} className="whitespace-nowrap px-3 py-2 font-medium">
                 {filter ? (
+                  // Capped width so a long property name does not stretch the column.
                   <select
                     aria-label={label}
                     value={filters[filter] ?? ''}
                     onChange={(event) => setFilter(filter, event.target.value)}
-                    className="bg-transparent font-medium uppercase"
+                    className="max-w-48 bg-transparent font-medium uppercase"
                   >
-                    <option value="">{label}: alle</option>
-                    {FILTER_OPTIONS[filter].map((option) => (
-                      <option key={option} value={option}>
-                        {option}
+                    <option value="">{FILTER_LABELS[filter]}: alle</option>
+                    {filterOptions(filter, properties).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
