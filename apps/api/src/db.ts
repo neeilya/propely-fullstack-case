@@ -12,9 +12,11 @@ import { join } from 'node:path';
 import {
   TASK_CATEGORIES,
   TASK_STATUSES,
+  type PageRequest,
   type Property,
   type Task,
   type TaskFilters,
+  type TaskPage,
   type TaskWithProperty,
 } from './types.js';
 
@@ -85,8 +87,7 @@ function buildFromSeed(db: Database.Database): void {
   );
 }
 
-const LIST_TASKS_SQL = `
-  SELECT tasks.*, properties.name AS property_name
+const FROM_TASKS_SQL = `
   FROM tasks
   JOIN properties ON properties.id = tasks.property_id
 `;
@@ -103,15 +104,40 @@ const SEARCH_SQL = `(${SEARCHED_COLUMNS.map(
   (column) => `instr(unicode_lower(${column}), unicode_lower(@q)) > 0`,
 ).join(' OR ')})`;
 
-/** Tasks matching every given filter, with their property name resolved. */
-export function listTasks(db: Database.Database, filters: TaskFilters = {}): TaskWithProperty[] {
+export const DEFAULT_PAGE_SIZE = 25;
+
+/** WHERE clause (or empty string) for every given filter, bound by @name. */
+function whereSql(filters: TaskFilters): string {
   const { q, ...exact } = filters;
   const where = Object.keys(exact)
     .filter((key) => exact[key as keyof typeof exact] !== undefined)
     .map((key) => `tasks.${key} = @${key}`);
   if (q) where.push(SEARCH_SQL);
-  const sql = where.length ? `${LIST_TASKS_SQL} WHERE ${where.join(' AND ')}` : LIST_TASKS_SQL;
-  return db.prepare<[TaskFilters], TaskWithProperty>(sql).all(filters);
+  return where.length ? `WHERE ${where.join(' AND ')}` : '';
+}
+
+/** One page of tasks matching every given filter, newest first, with their property name resolved. */
+export function listTasks(
+  db: Database.Database,
+  filters: TaskFilters = {},
+  { page = 1, pageSize = DEFAULT_PAGE_SIZE }: PageRequest = {},
+): TaskPage {
+  const where = whereSql(filters);
+  const { total } = db
+    .prepare<[TaskFilters], { total: number }>(
+      `SELECT count(*) AS total ${FROM_TASKS_SQL} ${where}`,
+    )
+    .get(filters)!;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+  page = Math.min(Math.max(1, page), lastPage);
+  const items = db
+    .prepare<[TaskFilters & { limit: number; offset: number }], TaskWithProperty>(
+      `SELECT tasks.*, properties.name AS property_name ${FROM_TASKS_SQL} ${where}
+       ORDER BY tasks.created_at DESC, tasks.id
+       LIMIT @limit OFFSET @offset`,
+    )
+    .all({ ...filters, limit: pageSize, offset: (page - 1) * pageSize });
+  return { items, total, page, pageSize };
 }
 
 export function openDatabase(): Database.Database {
