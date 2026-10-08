@@ -41,7 +41,7 @@ app.get('/api/tasks', (req, res) => {
     res.json(listTasks(db, filters, page));
   } catch {
     // Fail soft so the table always renders.
-    res.json({ items: [], total: 0, ...page });
+    res.json({ items: [], total: 0, page: 1, pageSize: page.pageSize });
   }
 });
 
