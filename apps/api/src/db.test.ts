@@ -87,3 +87,27 @@ test('listTasks pages are newest first, partition the filtered set, and clamp ou
   const empty = listTasks(db, { q: 'no such task anywhere' });
   assert.deepEqual(empty, { items: [], total: 0, page: 1, pageSize: 25 });
 });
+
+test('tasksPdf renders every row plus the filter and page summary', async () => {
+  const { tasksPdf } = await import('./pdf.js');
+  const db = openDatabase();
+  const result = listTasks(db, { status: 'New' }, { page: 2, pageSize: 40 });
+  const doc = tasksPdf(result, { status: 'New', q: 'lys' }, { compress: false });
+  const chunks: Buffer[] = [];
+  for await (const chunk of doc) chunks.push(chunk as Buffer);
+  const pdf = Buffer.concat(chunks);
+  // pdfkit writes each text run as a TJ array of hex strings; join them back into lines.
+  const text = [...pdf.toString('latin1').matchAll(/\[([^\]]*)\] TJ/g)]
+    .map((m) => [...m[1].matchAll(/<([0-9a-f]+)>/g)].map((h) => h[1]).join(''))
+    .map((hex) => Buffer.from(hex, 'hex').toString('latin1'))
+    .join('\n');
+
+  assert.ok(pdf.subarray(0, 5).equals(Buffer.from('%PDF-')));
+  assert.equal(result.items.length, 40);
+  for (const task of result.items) assert.ok(text.includes(task.id), task.id);
+  assert.ok(text.includes('Status: New \xb7 S\xf8k: \xab'), 'filter summary');
+  assert.ok(text.includes('av 200 oppgaver (side 2 av 5)'), 'range summary');
+  assert.ok(text.includes('Side 1 av '), 'page footer');
+  // Row numbers continue from the page offset.
+  assert.ok(text.includes('\n41\n'), 'row numbers');
+});

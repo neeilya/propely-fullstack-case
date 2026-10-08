@@ -1,7 +1,8 @@
 import cors from 'cors';
 import express from 'express';
 import { DEFAULT_PAGE_SIZE, listTasks, openDatabase } from './db.js';
-import { TASK_CATEGORIES, TASK_STATUSES, type TaskFilters } from './types.js';
+import { tasksPdf } from './pdf.js';
+import { TASK_CATEGORIES, TASK_STATUSES, type PageRequest, type TaskFilters } from './types.js';
 
 const PORT = Number(process.env.PORT ?? 8080);
 
@@ -27,22 +28,41 @@ const positiveInt = (value: unknown, fallback: number, max = Infinity): number =
   return Number.isInteger(n) && n >= 1 ? Math.min(n, max) : fallback;
 };
 
+/** Filters and page selection from the query string; both task routes accept the same params. */
+function parseTaskQuery(query: Record<string, unknown>): {
+  filters: TaskFilters;
+  page: PageRequest;
+} {
+  return {
+    filters: {
+      status: pick(query.status, TASK_STATUSES),
+      category: pick(query.category, TASK_CATEGORIES),
+      q: typeof query.q === 'string' ? query.q.trim() || undefined : undefined,
+    },
+    page: {
+      page: positiveInt(query.page, 1),
+      pageSize: positiveInt(query.size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE),
+    },
+  };
+}
+
 app.get('/api/tasks', (req, res) => {
-  const filters: TaskFilters = {
-    status: pick(req.query.status, TASK_STATUSES),
-    category: pick(req.query.category, TASK_CATEGORIES),
-    q: typeof req.query.q === 'string' ? req.query.q.trim() || undefined : undefined,
-  };
-  const page = {
-    page: positiveInt(req.query.page, 1),
-    pageSize: positiveInt(req.query.size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE),
-  };
+  const { filters, page } = parseTaskQuery(req.query);
   try {
     res.json(listTasks(db, filters, page));
   } catch {
     // Fail soft so the table always renders.
     res.json({ items: [], total: 0, page: 1, pageSize: page.pageSize });
   }
+});
+
+/** Same params as /api/tasks. Without `size` every matching row is exported, not just one page. */
+app.get('/api/tasks.pdf', (req, res) => {
+  const { filters, page } = parseTaskQuery(req.query);
+  const scope = req.query.size === undefined ? { pageSize: Number.MAX_SAFE_INTEGER } : page;
+  const result = listTasks(db, filters, scope);
+  res.attachment(`oppgaver-${new Date().toISOString().slice(0, 10)}.pdf`);
+  tasksPdf(result, filters).pipe(res);
 });
 
 app.listen(PORT, () => {
