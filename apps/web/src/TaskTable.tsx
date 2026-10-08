@@ -13,11 +13,8 @@ const COLUMNS: { label: string; filter?: FilterKey }[] = [
   { label: 'Kostnad (NOK)' },
 ];
 
-/** Renders the given tasks in a plain table. Filterable columns get a select in their header. */
+/** Renders the given tasks in a plain table, in the order given. Filterable columns get a select in their header. */
 export function TaskTable({ tasks, filters }: { tasks: Task[]; filters: TaskFilters }) {
-  // Newest first.
-  const rows = tasks.sort((a, b) => b.created_at.localeCompare(a.created_at));
-
   return (
     <div className="overflow-x-auto rounded border border-slate-200 bg-white">
       <table className="w-full border-collapse text-left text-sm">
@@ -47,8 +44,8 @@ export function TaskTable({ tasks, filters }: { tasks: Task[]; filters: TaskFilt
           </tr>
         </thead>
         <tbody>
-          {rows.map((task, index) => (
-            <tr key={index} className="border-t border-slate-200 align-top">
+          {tasks.map((task) => (
+            <tr key={task.id} className="border-t border-slate-200 align-top">
               <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-500">
                 {task.id}
               </td>
