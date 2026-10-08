@@ -1,15 +1,13 @@
+import type { TaskFilters } from './filters';
 import type { Task } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
-// Tasks change rarely, so we only hit the API once per session.
-let cache: Task[] | null = null;
+export async function fetchTasks(filters: TaskFilters): Promise<Task[]> {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.category) params.set('category', filters.category);
 
-export async function fetchTasks(): Promise<Task[]> {
-  if (cache) return cache;
-
-  const response = await fetch(`${API_BASE_URL}/api/tasks`);
-  cache = (await response.json()) as Task[];
-
-  return cache;
+  const response = await fetch(`${API_BASE_URL}/api/tasks?${params}`);
+  return (await response.json()) as Task[];
 }
