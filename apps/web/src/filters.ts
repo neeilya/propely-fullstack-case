@@ -5,6 +5,8 @@ import { TASK_CATEGORIES, TASK_STATUSES, type TaskCategory, type TaskStatus } fr
 export interface TaskFilters {
   status?: TaskStatus;
   category?: TaskCategory;
+  /** Free-text search, matched server-side against title, description and property. */
+  q?: string;
 }
 
 /** Filterable columns and their allowed values, keyed by query param name. */
@@ -20,6 +22,7 @@ export function readFilters(search: string): TaskFilters {
   return {
     status: pick(params.get('status'), TASK_STATUSES),
     category: pick(params.get('category'), TASK_CATEGORIES),
+    q: params.get('q') || undefined,
   };
 }
 
@@ -34,7 +37,7 @@ export function useFilters(): TaskFilters {
 }
 
 /** Writes one filter to the URL (empty value removes it) and notifies useFilters subscribers. */
-export function setFilter(key: FilterKey, value: string): void {
+export function setFilter(key: keyof TaskFilters, value: string): void {
   const url = new URL(window.location.href);
   if (value) url.searchParams.set(key, value);
   else url.searchParams.delete(key);

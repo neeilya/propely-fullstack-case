@@ -22,6 +22,8 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export interface TaskFilters {
   status?: TaskStatus;
   category?: TaskCategory;
+  /** Case-insensitive substring matched against title, description, property name and id. */
+  q?: string;
 }
 
 /** A single task, exactly as stored in SQLite. */

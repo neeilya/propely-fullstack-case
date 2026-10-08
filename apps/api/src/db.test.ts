@@ -30,3 +30,25 @@ test('listTasks applies status and category filters together', () => {
   );
   assert.equal(listTasks(db, { status: undefined }).length, all.length);
 });
+
+test('listTasks search is a case-insensitive substring match across title, description and property', () => {
+  const db = openDatabase();
+  const all = listTasks(db);
+  const ids = (tasks: { id: string }[]) => tasks.map((task) => task.id).sort();
+  const matches = (task: (typeof all)[number], q: string) =>
+    [task.title, task.description, task.property_name, task.property_id].some((text) =>
+      text.toLowerCase().includes(q.toLowerCase()),
+    );
+
+  // Mixed case and Norwegian letters (SQLite's own lower() only folds ASCII).
+  for (const q of ['LYSKILDER', 'blåbærstien', 'SJØGATA', 'prop-004']) {
+    const found = listTasks(db, { q });
+    assert.ok(found.length > 0, q);
+    assert.deepEqual(ids(found), ids(all.filter((task) => matches(task, q))));
+  }
+  assert.deepEqual(
+    ids(listTasks(db, { q: 'lyskilder', status: 'Completed' })),
+    ids(all.filter((task) => task.status === 'Completed' && matches(task, 'lyskilder'))),
+  );
+  assert.equal(listTasks(db, { q: '' }).length, all.length);
+});

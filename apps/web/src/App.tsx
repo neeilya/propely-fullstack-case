@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Task } from './types';
 
 import { fetchTasks } from './api';
-import { useFilters } from './filters';
+import { setFilter, useFilters } from './filters';
 import { TaskTable } from './TaskTable';
 
 export function App() {
@@ -30,7 +30,7 @@ export function App() {
     return () => {
       stale = true;
     };
-  }, [filters.status, filters.category]);
+  }, [filters.status, filters.category, filters.q]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -49,6 +49,15 @@ export function App() {
         )}
 
         {!error && !tasks && <p className="text-sm text-slate-500">Laster …</p>}
+
+        <input
+          type="search"
+          aria-label="Søk"
+          placeholder="Søk i tittel, beskrivelse og eiendom …"
+          value={filters.q ?? ''}
+          onChange={(event) => setFilter('q', event.target.value)}
+          className="mb-4 w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+        />
 
         {tasks && <TaskTable tasks={tasks} filters={filters} />}
       </main>

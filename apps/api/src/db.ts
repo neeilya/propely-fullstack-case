@@ -91,11 +91,25 @@ const LIST_TASKS_SQL = `
   JOIN properties ON properties.id = tasks.property_id
 `;
 
+const SEARCHED_COLUMNS = [
+  'tasks.title',
+  'tasks.description',
+  'properties.name',
+  'tasks.property_id',
+];
+
+// instr() rather than LIKE so user input needs no wildcard escaping.
+const SEARCH_SQL = `(${SEARCHED_COLUMNS.map(
+  (column) => `instr(unicode_lower(${column}), unicode_lower(@q)) > 0`,
+).join(' OR ')})`;
+
 /** Tasks matching every given filter, with their property name resolved. */
 export function listTasks(db: Database.Database, filters: TaskFilters = {}): TaskWithProperty[] {
-  const where = Object.keys(filters)
-    .filter((key) => filters[key as keyof TaskFilters] !== undefined)
+  const { q, ...exact } = filters;
+  const where = Object.keys(exact)
+    .filter((key) => exact[key as keyof typeof exact] !== undefined)
     .map((key) => `tasks.${key} = @${key}`);
+  if (q) where.push(SEARCH_SQL);
   const sql = where.length ? `${LIST_TASKS_SQL} WHERE ${where.join(' AND ')}` : LIST_TASKS_SQL;
   return db.prepare<[TaskFilters], TaskWithProperty>(sql).all(filters);
 }
@@ -104,6 +118,8 @@ export function openDatabase(): Database.Database {
   const needsSeed = !existsSync(DB_PATH);
   const db = new Database(DB_PATH);
   db.pragma('foreign_keys = ON');
+  // SQLite's own lower() only folds ASCII, so Å/Ø/Æ would not match å/ø/æ.
+  db.function('unicode_lower', { deterministic: true }, (value) => String(value).toLowerCase());
 
   if (needsSeed) {
     buildFromSeed(db);
