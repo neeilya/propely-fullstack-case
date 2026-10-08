@@ -9,7 +9,13 @@
 import Database from 'better-sqlite3';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { TASK_CATEGORIES, TASK_STATUSES, type Property, type Task } from './types.js';
+import {
+  TASK_CATEGORIES,
+  TASK_STATUSES,
+  type Property,
+  type Task,
+  type TaskWithProperty,
+} from './types.js';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
 export const DB_PATH = process.env.DB_PATH ?? join(REPO_ROOT, 'apps', 'api', 'tasks.db');
@@ -76,6 +82,17 @@ function buildFromSeed(db: Database.Database): void {
   console.log(
     `Built ${DB_PATH} from seed (${properties.length} properties, ${tasks.length} tasks).`,
   );
+}
+
+const LIST_TASKS_SQL = `
+  SELECT tasks.*, properties.name AS property_name
+  FROM tasks
+  JOIN properties ON properties.id = tasks.property_id
+`;
+
+/** All tasks with their property name resolved. */
+export function listTasks(db: Database.Database): TaskWithProperty[] {
+  return db.prepare<[], TaskWithProperty>(LIST_TASKS_SQL).all();
 }
 
 export function openDatabase(): Database.Database {
