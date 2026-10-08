@@ -58,7 +58,7 @@ export function TaskTable({
         <tbody>
           {tasks.map((task, index) => (
             <tr key={task.id} className="border-t border-slate-200 align-top">
-              <td className="whitespace-nowrap px-3 py-2 text-right text-slate-500">
+              <td className="whitespace-nowrap px-3 py-2 text-left text-slate-500">
                 {offset + index + 1}
               </td>
               <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-500">
