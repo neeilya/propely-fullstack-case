@@ -4,6 +4,7 @@ import type { TaskPage } from './types';
 
 import { fetchTasks } from './api';
 import { DownloadPdf } from './DownloadPdf';
+import { FilterChips } from './FilterChips';
 import { setFilter, useFilters } from './filters';
 import { Pagination } from './Pagination';
 import { TaskTable } from './TaskTable';
@@ -34,11 +35,14 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold">Vedlikeholdsoppgaver</h1>
-        <p className="text-sm text-slate-500">
-          {tasks ? `${tasks.total} oppgaver` : 'Laster oppgaver …'}
-        </p>
+      <header className="flex items-center gap-4 border-b border-slate-200 bg-white px-6 py-4">
+        <div>
+          <h1 className="text-lg font-semibold">Vedlikeholdsoppgaver</h1>
+          <p className="text-sm text-slate-500">
+            {tasks ? `${tasks.total} oppgaver` : 'Laster oppgaver …'}
+          </p>
+        </div>
+        {tasks && <DownloadPdf filters={filters} tasks={tasks} />}
       </header>
 
       <main className="p-6">
@@ -59,11 +63,14 @@ export function App() {
             onChange={(event) => setFilter('q', event.target.value)}
             className="w-full max-w-md rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           />
-          {tasks && <DownloadPdf filters={filters} tasks={tasks} />}
+          <FilterChips filters={filters} />
         </div>
 
         {tasks && (
           <>
+            <div className="mb-4">
+              <Pagination {...tasks} />
+            </div>
             <TaskTable
               tasks={tasks.items}
               filters={filters}
