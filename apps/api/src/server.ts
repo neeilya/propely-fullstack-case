@@ -23,6 +23,7 @@ app.get('/api/tasks', (req, res) => {
   const filters: TaskFilters = {
     status: pick(req.query.status, TASK_STATUSES),
     category: pick(req.query.category, TASK_CATEGORIES),
+    q: typeof req.query.q === 'string' ? req.query.q.trim() || undefined : undefined,
   };
   try {
     res.json(listTasks(db, filters));
